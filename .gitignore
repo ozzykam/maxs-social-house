@@ -1,0 +1,17 @@
+node_modules/
+.next/
+out/
+dist/
+lib/
+.env
+.env.local
+.turbo/
+*.log
+.firebase/
+.DS_Store
+firebase-debug.log
+firestore-debug.log
+01-build-info/
+service-account.json
+packages/*/dist/
+firebase/functions/lib/

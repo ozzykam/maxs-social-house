@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node firebase/functions/lib/index.js)",
+      "Bash(firebase --version)",
+      "Bash(npx firebase *)",
+      "Bash(npm install *)",
+      "Bash(npm run *)"
+    ]
+  }
+}

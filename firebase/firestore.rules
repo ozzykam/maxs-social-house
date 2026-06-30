@@ -1,0 +1,143 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- Helpers ----
+    // Permissions are delivered as a custom claim array on the auth token,
+    // resolved by the onUserWrite Cloud Function. Rules read the token only,
+    // never the /users doc, to avoid circular reads. See PHASE_1_SPEC.md 3.4.
+    function signedIn() {
+      return request.auth != null;
+    }
+    function hasPerm(p) {
+      return signedIn()
+        && 'permissions' in request.auth.token
+        && p in request.auth.token.permissions;
+    }
+    function role() {
+      return signedIn() && 'role' in request.auth.token
+        ? request.auth.token.role : 'public';
+    }
+
+    // ---- Public-facing content: world-readable, permission-gated writes ----
+    match /menu/{itemId} {
+      allow read: if true;
+      allow write: if hasPerm('cms:menu');
+    }
+    match /menuCategories/{categoryId} {
+      allow read: if true;
+      allow write: if hasPerm('cms:menu');
+    }
+    match /specials/{specialId} {
+      allow read: if true;
+      allow write: if hasPerm('cms:specials');
+    }
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if hasPerm('cms:events');
+    }
+    match /ticketTiers/{tierId} {
+      allow read: if true;
+      // 'sold' increments are handled server-side by the ticket webhook function,
+      // which uses the Admin SDK and bypasses rules. Manual edits need tickets:manage.
+      allow write: if hasPerm('tickets:manage');
+    }
+    match /media/{mediaId} {
+      allow read: if true;
+      allow write: if hasPerm('cms:media');
+    }
+    match /performers/{performerId} {
+      // internalNotes is excluded from public reads at the query/projection layer;
+      // performer base records are public for show pages.
+      allow read: if true;
+      allow write: if hasPerm('entertainment:write');
+    }
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if hasPerm('cms:settings');
+    }
+
+    // ---- Tickets: created server-side only; readable by buyer or staff ----
+    match /tickets/{ticketId} {
+      allow read: if hasPerm('tickets:read')
+        || (signedIn() && resource.data.contactId == request.auth.uid);
+      // Writes happen via the Stripe webhook Cloud Function (Admin SDK).
+      allow write: if hasPerm('tickets:manage');
+    }
+
+    // ---- CRM: internal only ----
+    match /contacts/{contactId} {
+      allow read: if hasPerm('crm:read')
+        || (signedIn() && contactId == request.auth.uid); // customer reads own record
+      allow write: if hasPerm('crm:write');
+    }
+    match /inquiries/{inquiryId} {
+      // Public form submissions are created via the submitInquiry Cloud Function
+      // (Admin SDK), so direct client create is disabled here.
+      allow create: if false;
+      allow read, update: if hasPerm('crm:read');
+      allow delete: if hasPerm('crm:delete');
+
+      match /communications/{commId} {
+        allow read, write: if hasPerm('crm:read');
+      }
+      match /notes/{noteId} {
+        allow read, write: if hasPerm('crm:read');
+      }
+    }
+
+    // ---- Bookings ----
+    match /bookings/{bookingId} {
+      // Staff get read access (scoped to upcoming dates at the query layer).
+      allow read: if hasPerm('bookings:read');
+      // Booking writes go through the conflict-check Cloud Function (Admin SDK).
+      allow write: if hasPerm('bookings:write');
+    }
+
+    // ---- Pricing config ----
+    match /pricingConfig/{docId=**} {
+      allow read: if hasPerm('invoices:read') || hasPerm('bookings:read');
+      allow write: if hasPerm('invoices:write');
+    }
+
+    // ---- Invoices, payment methods, transactions: financial, locked down ----
+    match /quotes/{quoteId} {
+      allow read: if hasPerm('invoices:read');
+      allow write: if hasPerm('invoices:write');
+    }
+    match /invoices/{invoiceId} {
+      allow read: if hasPerm('invoices:read')
+        || (signedIn() && resource.data.contactId == request.auth.uid);
+      allow write: if hasPerm('invoices:write');
+    }
+    match /paymentMethods/{methodId} {
+      // Even reads are sensitive. No customer self-read of stored tokens.
+      allow read: if hasPerm('payments:read');
+      allow write: if hasPerm('payments:collect');
+    }
+    match /transactions/{transactionId} {
+      allow read: if hasPerm('payments:read');
+      // Transactions are written by payment webhooks (Admin SDK). No client writes.
+      allow write: if false;
+    }
+
+    // ---- Users: account management ----
+    match /users/{userId} {
+      // A user can read their own record; managers/admins per permission.
+      allow read: if signedIn() && (request.auth.uid == userId || hasPerm('users:manage_staff'));
+      // Creating/editing admins requires the elevated claim.
+      allow write: if hasPerm('users:manage_admins')
+        || (hasPerm('users:manage_staff')
+            && request.resource.data.role in ['manager', 'staff']);
+    }
+    match /roleDefinitions/{role} {
+      allow read: if signedIn();
+      allow write: if hasPerm('users:manage_admins');
+    }
+
+    // ---- Default deny ----
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
