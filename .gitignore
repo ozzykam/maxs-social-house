@@ -14,3 +14,4 @@ firestore-debug.log
 service-account.json
 packages/*/dist/
 firebase/functions/lib/
+meeting-prep.md

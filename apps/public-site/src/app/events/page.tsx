@@ -75,7 +75,7 @@ export default async function EventsPage() {
 
                 {/* Image */}
                 {imgUrl ? (
-                  <div className="relative w-28 h-20 shrink-0 overflow-hidden">
+                  <div className="relative w-28 h-20 rounded-md shrink-0 overflow-hidden">
                     <Image
                       src={imgUrl}
                       alt={event.title}
@@ -122,6 +122,22 @@ export default async function EventsPage() {
           })}
         </div>
       )}
+
+      {/* Talent CTA */}
+      <div className="mt-20 border-t border-white/5 pt-16 text-center">
+        <p className="text-amber-400 text-xs tracking-[0.25em] uppercase mb-4">Join Our Lineup</p>
+        <h2 className="font-serif text-3xl font-bold text-white mb-3">Want to Perform at Max&apos;s?</h2>
+        <p className="text-neutral-400 mb-8 max-w-md mx-auto leading-relaxed">
+          We&apos;re always looking for talented artists, musicians, DJs, and entertainers.
+          Tell us about your act and we&apos;ll be in touch.
+        </p>
+        <Link
+          href="/talent/inquire"
+          className="inline-block px-8 py-3.5 border border-white/20 text-white text-sm font-semibold rounded-full hover:bg-white/10 transition-colors"
+        >
+          Submit a Booking Inquiry
+        </Link>
+      </div>
     </div>
   );
 }

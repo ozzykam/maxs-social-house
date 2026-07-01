@@ -2,7 +2,7 @@ import {
   collection, doc, getDocs, getDoc, updateDoc, addDoc, orderBy, query, where, documentId,
 } from "firebase/firestore";
 import { db } from "@maxs/services";
-import type { Inquiry, Contact, InquiryNote, EventSpaceStage, TalentStage } from "@maxs/types";
+import type { Inquiry, Contact, InquiryNote, InquiryType, EventSpaceStage, TalentStage } from "@maxs/types";
 
 type InquiryRow = Inquiry & { contactName?: string; contactEmail?: string };
 
@@ -34,6 +34,16 @@ export async function listInquiries(): Promise<InquiryRow[]> {
     }
     return inq;
   });
+}
+
+export async function listInquiriesByType(type: InquiryType): Promise<InquiryRow[]> {
+  const all = await listInquiries();
+  return all.filter((inq) => inq.type === type);
+}
+
+export async function listContacts(): Promise<Contact[]> {
+  const snap = await getDocs(query(collection(db, "contacts"), orderBy("createdAt", "desc")));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Contact);
 }
 
 export async function getInquiryById(id: string): Promise<(Inquiry & { contactName?: string; contactEmail?: string }) | null> {
