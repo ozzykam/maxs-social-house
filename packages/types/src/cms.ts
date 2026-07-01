@@ -51,11 +51,27 @@ export type EventStatus =
   | "completed"
   | "cancelled";
 
+export type EventCategory =
+  | "live_music"
+  | "dj_night"
+  | "line_dancing"
+  | "piano_dining"
+  | "open_mic"
+  | "comedy"
+  | "trivia"
+  | "karaoke"
+  | "tasting"
+  | "themed"
+  | "block_party"
+  | "brunch"
+  | "other";
+
 export interface PublicEvent {
   id: string;
   title: string;
   slug: string;
   description: string;
+  category: EventCategory;
   lineup: string[];
   date: number; // epoch millis, date of event
   startTime: string; // "HH:mm"
@@ -68,6 +84,7 @@ export interface PublicEvent {
   status: EventStatus;
   featured: boolean;
   createdBy: string;
+  updatedBy: string;
   updatedAt: number;
 }
 

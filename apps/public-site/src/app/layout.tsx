@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Playfair_Display, Inter } from "next/font/google";
+// @ts-ignore
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -32,8 +34,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="bg-neutral-950 text-neutral-100 antialiased min-h-screen font-sans">
         <header className="fixed top-0 left-0 right-0 z-50 bg-neutral-950/90 backdrop-blur-sm border-b border-white/10">
           <nav className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-            <Link href="/" className="font-serif text-lg font-bold tracking-wide text-white">
-              Max&apos;s Social House
+            <Link href="/" className="flex items-center">
+              <Image
+                src="/images/maxs-logo-simple.webp"
+                alt="Max's Social House"
+                width={120}
+                height={48}
+                className="h-9 w-auto"
+              />
             </Link>
             <div className="hidden md:flex items-center gap-8 text-sm text-neutral-400">
               {NAV_LINKS.map(({ href, label }) => (

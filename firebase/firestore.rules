@@ -69,12 +69,12 @@ service cloud.firestore {
     match /contacts/{contactId} {
       allow read: if hasPerm('crm:read')
         || (signedIn() && contactId == request.auth.uid); // customer reads own record
-      allow write: if hasPerm('crm:write');
+      allow create: if true; // public inquiry form submissions
+      allow update, delete: if hasPerm('crm:write');
     }
     match /inquiries/{inquiryId} {
-      // Public form submissions are created via the submitInquiry Cloud Function
-      // (Admin SDK), so direct client create is disabled here.
-      allow create: if false;
+      // Public inquiry forms create directly via Next.js server action (Web SDK).
+      allow create: if true;
       allow read, update: if hasPerm('crm:read');
       allow delete: if hasPerm('crm:delete');
 

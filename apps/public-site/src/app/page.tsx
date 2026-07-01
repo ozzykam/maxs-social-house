@@ -4,6 +4,13 @@ import { getUpcomingEvents, getActiveSpecials, getFeaturedItems, getMediaUrls } 
 
 export const revalidate = 1800;
 
+function formatTime(hhmm: string): string {
+  const [h, m] = hhmm.split(":").map(Number);
+  const period = h >= 12 ? "PM" : "AM";
+  const hour = h % 12 || 12;
+  return m === 0 ? `${hour} ${period}` : `${hour}:${m.toString().padStart(2, "0")} ${period}`;
+}
+
 export default async function Home() {
   const [events, specials, featured] = await Promise.all([
     getUpcomingEvents(4),
@@ -14,22 +21,34 @@ export default async function Home() {
   const imageRefs = [
     ...specials.map((s) => s.imageRef),
     ...featured.map((i) => i.imageRef),
+    ...events.map((e) => e.imageRef),
   ].filter(Boolean) as string[];
   const mediaUrls = await getMediaUrls(imageRefs);
 
   return (
     <>
       {/* Hero */}
-      <section className="relative flex items-center justify-center min-h-[85vh] bg-neutral-950 text-center px-6 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(245,200,66,0.06)_0%,_transparent_70%)]" />
+      <section className="relative flex items-center justify-center min-h-[85vh] text-center px-6 overflow-hidden">
+        <Image
+          src="/images/maxs-background-blue.webp"
+          alt=""
+          fill
+          priority
+          className="object-cover"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-black/40" />
         <div className="relative z-10 max-w-3xl mx-auto">
-          <p className="text-amber-400 text-xs tracking-[0.35em] uppercase mb-6">Welcome to</p>
-          <h1 className="font-serif text-6xl md:text-8xl font-bold text-white mb-6 leading-none tracking-tight">
-            Max&apos;s Social House
-          </h1>
-          <p className="text-neutral-400 text-lg mb-10 tracking-wide">
-            Upscale dining &middot; Live music &middot; Private events
-          </p>
+           <p className="text-amber-400 text-xs tracking-[0.35em] uppercase mb-6
+">Welcome to</p>
+          <Image
+            src="/images/maxs-logo-with-sub.webp"
+            alt="Max's Social House — Dining · Entertainment · Events"
+            width={540}
+            height={640}
+            priority
+            className="mx-auto mb-10 w-auto max-w-[280px] md:max-w-sm lg:max-w-md"
+          />
           <div className="flex flex-wrap gap-4 justify-center">
             <Link
               href="/menu"
@@ -164,29 +183,45 @@ export default async function Home() {
             </Link>
           </div>
           <div className="space-y-3">
-            {events.map((e) => (
-              <Link
-                key={e.id}
-                href={`/events/${e.slug}`}
-                className="flex items-center justify-between bg-neutral-900 border border-white/5 rounded-xl px-6 py-5 hover:bg-neutral-800 hover:border-white/10 transition-all group"
-              >
-                <div>
-                  <p className="font-semibold text-white group-hover:text-amber-400 transition-colors">
-                    {e.title}
-                  </p>
-                  <p className="text-sm text-neutral-500 mt-0.5">
-                    {new Date(e.date).toLocaleDateString("en-US", {
-                      weekday: "long",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                    {" · "}
-                    {e.startTime}
-                  </p>
-                </div>
-                <span className="text-neutral-600 group-hover:text-amber-400 transition-colors text-xl">→</span>
-              </Link>
-            ))}
+            {events.map((e) => {
+              const imgUrl = e.imageRef ? mediaUrls[e.imageRef] : null;
+              return (
+                <Link
+                  key={e.id}
+                  href={`/events/${e.slug}`}
+                  className="flex items-center gap-4 bg-neutral-900 border border-white/5 rounded-xl overflow-hidden hover:bg-neutral-800 hover:border-white/10 transition-all group"
+                >
+                  {imgUrl ? (
+                    <div className="relative ml-2 rounded-md w-20 h-16 shrink-0 overflow-hidden">
+                      <Image
+                        src={imgUrl}
+                        alt={e.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        sizes="80px"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-20 h-16 shrink-0 bg-neutral-800" />
+                  )}
+                  <div className="flex-1 min-w-0 py-4">
+                    <p className="font-semibold text-white group-hover:text-amber-400 transition-colors truncate">
+                      {e.title}
+                    </p>
+                    <p className="text-sm text-neutral-500 mt-0.5">
+                      {new Date(e.date).toLocaleDateString("en-US", {
+                        weekday: "long",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                      {" · "}
+                      {formatTime(e.startTime)}
+                    </p>
+                  </div>
+                  <span className="text-neutral-600 group-hover:text-amber-400 transition-colors text-xl pr-5 shrink-0">→</span>
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}
