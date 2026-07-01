@@ -34,11 +34,12 @@ export interface Special {
   title: string;
   description: string;
   imageRef: string | null;
-  linkedMenuItemId?: string;
+  linkedMenuItemId?: string | null;
   startDate: number; // epoch millis
   endDate: number;
   published: boolean;
   createdBy: string;
+  updatedBy: string;
   updatedAt: number;
 }
 
@@ -73,6 +74,7 @@ export interface PublicEvent {
 export interface MediaItem {
   id: string;
   fileName: string;
+  storagePath: string;  // e.g. "media/1234567890_photo.jpg" — used for deletion
   storageUrl: string;
   thumbnailUrl?: string;
   type: "image" | "video";

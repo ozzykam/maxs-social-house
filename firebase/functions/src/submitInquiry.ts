@@ -1,16 +1,6 @@
-// firebase/functions/src/submitInquiry.ts
-// Public inquiry intake. Called by the public site for both event-space and
-// talent inquiries. Runs as trusted server code so the /inquiries collection
-// can deny all direct client creates (see firestore.rules).
-//
-// Responsibilities: validate, rate-limit, match-or-create a contact, write the
-// inquiry, and notify whoever owns that inquiry type.
-
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import type { InquiryType } from "@maxs/types";
-
-if (!admin.apps.length) admin.initializeApp();
 
 interface SubmitInquiryData {
   type: InquiryType;
@@ -35,11 +25,12 @@ function isValidEmail(email: string): boolean {
 }
 
 export const submitInquiry = onCall<SubmitInquiryData>(
-  { enforceAppCheck: false /* TODO: enable App Check before launch (spec 11) */ },
+  { enforceAppCheck: false /* TODO: enable App Check before launch (spec §11) */ },
   async (request) => {
+    if (!admin.apps.length) admin.initializeApp();
+
     const d = request.data;
 
-    // ---- Validation ----
     if (!d || (d.type !== "event_space" && d.type !== "talent")) {
       throw new HttpsError("invalid-argument", "Invalid inquiry type.");
     }
@@ -53,7 +44,6 @@ export const submitInquiry = onCall<SubmitInquiryData>(
     const db = admin.firestore();
     const now = Date.now();
 
-    // ---- Match or create contact (by email) ----
     const existing = await db
       .collection("contacts")
       .where("email", "==", d.email.toLowerCase())
@@ -78,7 +68,6 @@ export const submitInquiry = onCall<SubmitInquiryData>(
       });
     }
 
-    // ---- Write inquiry ----
     const inquiryRef = db.collection("inquiries").doc();
     await inquiryRef.set({
       contactId,
@@ -100,7 +89,6 @@ export const submitInquiry = onCall<SubmitInquiryData>(
       updatedAt: now,
     });
 
-    // Log the originating form submission as the first communication entry.
     await inquiryRef.collection("communications").doc().set({
       channel: "form_submission",
       summary: `New ${d.type} inquiry via website`,
@@ -109,7 +97,7 @@ export const submitInquiry = onCall<SubmitInquiryData>(
       timestamp: now,
     });
 
-    // TODO (spec 9): trigger notification email/Slack to the owning manager.
+    // TODO (spec §9): trigger notification email/Slack to the owning manager.
 
     return { inquiryId: inquiryRef.id };
   }

@@ -10,6 +10,9 @@
     "dev": "turbo run dev",
     "dev:public": "turbo run dev --filter=public-site",
     "dev:dashboard": "turbo run dev --filter=dashboard",
+    "dev:dashboard:win": "npm run build --workspace packages/types && npm run dev --workspace apps/dashboard",
+    "dev:public:win": "npm run build --workspace packages/types && npm run dev --workspace apps/public-site",
+    "dev:win": "npm run build --workspace packages/types && concurrently -n dashboard,public-site -c cyan,magenta \"npm run dev --workspace apps/dashboard\" \"npm run dev --workspace apps/public-site\"",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
@@ -20,11 +23,12 @@
     "build:functions": "npm run build --workspace packages/types && npm run build --workspace firebase/functions"
   },
   "devDependencies": {
-    "turbo": "^2.3.0",
-    "prettier": "^3.4.0",
-    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0",
+    "concurrently": "^10.0.3",
     "firebase-admin": "^13.0.0",
-    "@types/node": "^22.0.0"
+    "prettier": "^3.4.0",
+    "turbo": "^2.3.0",
+    "typescript": "^5.7.0"
   },
   "packageManager": "npm@10.9.0",
   "engines": {

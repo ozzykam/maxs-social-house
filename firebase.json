@@ -9,7 +9,6 @@
       "source": "firebase/functions",
       "codebase": "default",
       "runtime": "nodejs22",
-      "workspaceDir": ".",
       "ignore": [".git", "node_modules", "**/*.ts"]
     }
   ],

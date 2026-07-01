@@ -1,11 +1,30 @@
 "use client";
 import { useAuth } from "@/lib/useAuth";
 import { PermissionGate } from "@/components/PermissionGate";
+import type { Role, ManagerType } from "@maxs/types";
 
-// Starter dashboard home. Each module link is gated by the permissions that
-// module requires. Replace with the real nav + module routes during build.
+const ROLE_LABELS: Record<Role, string> = {
+  super_admin: "Super Admin",
+  admin: "Admin",
+  manager: "Manager",
+  staff: "Staff",
+  customer: "Customer",
+};
+
+const MANAGER_TYPE_LABELS: Record<ManagerType, string> = {
+  events: "Events Coordinator",
+  talent: "Talent Manager",
+  cms: "CMS Manager",
+};
+
+function formatRole(role?: Role, managerType?: ManagerType): string {
+  if (!role) return "";
+  if (role === "manager" && managerType) return MANAGER_TYPE_LABELS[managerType];
+  return ROLE_LABELS[role];
+}
+
 export default function DashboardHome() {
-  const { user, claims, loading } = useAuth();
+  const { user, claims, userRecord, loading } = useAuth();
 
   if (loading) return <main style={{ padding: 24 }}>Loading…</main>;
   if (!user) return <main style={{ padding: 24 }}>Please sign in.</main>;
@@ -13,7 +32,7 @@ export default function DashboardHome() {
   return (
     <main style={{ padding: 24, fontFamily: "system-ui" }}>
       <h1>Max&apos;s Social House — Dashboard</h1>
-      <p>Signed in as {user.email} ({claims?.role})</p>
+      <p>Signed in as {userRecord ? `${userRecord.firstName} ${userRecord.lastName}` : user.email} ({formatRole(claims?.role, claims?.managerType)})</p>
 
       <nav style={{ display: "grid", gap: 8, marginTop: 16 }}>
         <PermissionGate anyOf={["cms:menu", "cms:specials", "cms:events"]}>

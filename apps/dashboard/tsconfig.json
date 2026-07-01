@@ -9,9 +9,9 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"],
+      "@maxs/services": ["../../packages/services/src/index.ts"],
+      "@maxs/types": ["../../packages/types/dist/index.d.ts"]
     },
     "allowJs": true,
     "incremental": true

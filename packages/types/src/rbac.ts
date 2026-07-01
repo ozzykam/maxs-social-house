@@ -54,7 +54,10 @@ export interface PermissionOverrides {
 export interface UserRecord {
   uid: string;
   email: string;
-  displayName: string;
+  firstName: string;
+  middleInitial?: string;
+  lastName: string;
+  displayName: string; // derived: `${firstName} ${lastName}`
   role: Role;
   managerType?: ManagerType;
   permissionOverrides?: PermissionOverrides;
